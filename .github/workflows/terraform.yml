@@ -73,7 +73,7 @@ jobs:
       uses: hashicorp/setup-terraform@v1
 
     - name: Log in with Azure
-      run: az login --service-principal -u '${{ secrets.AZURE_CREDENTIALS.clientId}}' -p '${{ secrets.AZURE_CREDENTIALS.clientSecret}}' --tenant '${{ secrets.AZURE_CREDENTIALS.tenantId}}'
+      run: az login --service-principal -u '${{ secrets.CLIENT_ID}}' -p '${{ secrets.CLIENT_SECRET}}' --tenant '${{ secrets.TENANT_ID}}'
 
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init
