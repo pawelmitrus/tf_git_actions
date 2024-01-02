@@ -81,6 +81,7 @@ jobs:
         export ARM_CLIENT_SECRET="${{ secrets.CLIENT_SECRET}}"
         export ARM_TENANT_ID="${{ secrets.TENANT_ID}}"
         export ARM_SUBSCRIPTION_ID="${{ secrets.SUBSCRIPTION_ID}}"
+        terraform init -var-file="conf/dev.conf" -backend-config="backend/dev.tfbackend"
 
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init
