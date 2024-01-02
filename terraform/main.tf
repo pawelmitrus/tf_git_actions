@@ -53,11 +53,8 @@ resource "azurerm_storage_account" "storage" {
   account_replication_type = "LRS"
 }
 
-# resource "azurerm_storage_container" "cont" {
-#   name                  = "com01"
-#   storage_account_name  = azurerm_storage_account.storage.name
-#   container_access_type = "private"
-# }
+data "azurerm_client_config" "client" {
+}
 
 resource "azurerm_key_vault" "kv" {
   name                        = "${var.prefix}-${var.environment}-kv"
@@ -70,5 +67,26 @@ resource "azurerm_key_vault" "kv" {
 
   sku_name = "standard"
 
-  access_policy {}
+  access_policy {
+    tenant_id = var.tenant_id
+    object_id = data.azurerm_client_config.current.object_id
+
+    key_permissions = [
+      "Get",
+    ]
+
+    secret_permissions = [
+      "Get",
+    ]
+
+    storage_permissions = [
+      "Get",
+    ]
+  }
 }
+
+# resource "azurerm_storage_container" "cont" {
+#   name                  = "com01"
+#   storage_account_name  = azurerm_storage_account.storage.name
+#   container_access_type = "private"
+# }
