@@ -88,7 +88,7 @@ jobs:
 
     # Checks that all Terraform configuration files adhere to a canonical format
     - name: Terraform Format
-      run: terraform fmt -var-file="conf/dev.conf" -check
+      run: terraform fmt -check
 
     # Generates an execution plan for Terraform
     - name: Terraform Plan
