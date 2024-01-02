@@ -50,9 +50,13 @@ on:
     inputs:
       environment:
         description: 'Environment to run against'
-        type: environment
+        type: choice
         required: true
-        default: development
+        default: dev
+        options:
+          - dev
+          - test
+          - prod
       deployment:
         description: 'Deploy to target env'
         required: true
@@ -98,8 +102,6 @@ jobs:
   terraform:
     name: Terraform
     runs-on: ubuntu-latest
-    environment:
-      name: development
     needs: calculate_variables
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
@@ -128,14 +130,14 @@ jobs:
 
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init
-      run: terraform init -var-file="conf/${{vars.ENV}}.conf" -backend-config="backend/${{vars.ENV}}.tfbackend"
+      run: terraform init -var-file="conf/${{env.ENVIRONMENT}}.conf" -backend-config="backend/${{env.ENVIRONMENT}}.tfbackend"
 
     - name: Terraform Validate
       run: terraform validate
 
     # Generates an execution plan for Terraform
     - name: Terraform Plan
-      run: terraform plan -input=false -var-file="conf/${{vars.ENV}}.conf"
+      run: terraform plan -input=false -var-file="conf/${{env.ENVIRONMENT}}.conf"
 
     - name: check
       run: echo ${{env.DEPLOYMENT}}
@@ -148,4 +150,4 @@ jobs:
       # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
     - name: Terraform Apply
       if: env.DEPLOYMENT == 'true'
-      run: terraform apply -auto-approve -input=false -var-file="conf/${{vars.ENV}}.conf"
+      run: terraform apply -auto-approve -input=false -var-file="conf/${{env.ENVIRONMENT}}.conf"
