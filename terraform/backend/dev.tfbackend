@@ -1,0 +1,4 @@
+resource_group_name  = "mystaterg"
+storage_account_name = "mystateacc"
+container_name       = "tfstate"
+key                  = "dev.terraform.tfstate"
