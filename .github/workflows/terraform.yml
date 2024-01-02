@@ -46,7 +46,16 @@ name: 'Terraform'
 
 on:
   push:
-    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to run against'
+        type: environment
+        required: true
+      deployment:
+        description: 'Deploy to target env'
+        required: true
+        type: boolean
   pull_request:
     types: [closed]
 
@@ -54,11 +63,24 @@ on:
 permissions:
   contents: read
 
+env:
+  ENVIRONMENT: development
+  DEPLOYMENT: false
+
 jobs:
+  log-the-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "Environment: $ENVIRONMENT"
+          echo "Deployment: $DEPLOYMENT"
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          DEPLOYMENT: ${{ inputs.deployment }}
   terraform:
     name: 'Terraform'
     runs-on: ubuntu-latest
-    environment: development
+    environment: ${{env.ENVIRONMENT}} 
     # if: github.event.pull_request.merged == true
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
@@ -75,8 +97,8 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v1
 
-    - name: Log in with Azure
-      run: az login --service-principal -u '${{ secrets.CLIENT_ID}}' -p '${{ secrets.CLIENT_SECRET}}' --tenant '${{ secrets.TENANT_ID}}'
+    # - name: Log in with Azure
+    #   run: az login --service-principal -u '${{ secrets.CLIENT_ID}}' -p '${{ secrets.CLIENT_SECRET}}' --tenant '${{ secrets.TENANT_ID}}'
 
     - name: Export env variables to azure auth for tf
       run: |
@@ -89,16 +111,21 @@ jobs:
     - name: Terraform Init
       run: terraform init -var-file="conf/${{vars.ENV}}.conf" -backend-config="backend/${{vars.ENV}}.tfbackend"
 
-    # Checks that all Terraform configuration files adhere to a canonical format
-    - name: Terraform Format
-      run: terraform fmt -check
+    - name: Terraform Validate
+      run: terraform validate
 
     # Generates an execution plan for Terraform
     - name: Terraform Plan
       run: terraform plan -input=false -var-file="conf/${{vars.ENV}}.conf"
 
+
+    # Checks that all Terraform configuration files adhere to a canonical format
+    - name: Terraform Format
+      if: (github.event_name == 'pull_request' && github.event.pull_request.merged == true) || ${{env.DEPLOYMENT}}
+      run: terraform fmt -check
+
       # On push to "main", build or change infrastructure according to Terraform configuration files
       # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
     - name: Terraform Apply
-      if: github.ref == 'refs/heads/"main"' && github.event_name == 'push'
+      if: (github.event_name == 'pull_request' && github.event.pull_request.merged == true) || ${{env.DEPLOYMENT}}
       run: terraform apply -auto-approve -input=false -var-file="conf/${{vars.ENV}}.conf"
