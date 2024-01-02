@@ -68,7 +68,7 @@ env:
   DEPLOYMENT: false
 
 jobs:
-  log-the-inputs:
+  inputs:
     runs-on: ubuntu-latest
     steps:
       - run: |
@@ -78,10 +78,10 @@ jobs:
           ENVIRONMENT: ${{ inputs.environment }}
           DEPLOYMENT: ${{ inputs.deployment }}
   terraform:
-    name: 'Terraform'
+    name: Terraform
     runs-on: ubuntu-latest
     environment: development
-    # if: github.event.pull_request.merged == true
+    needs: inputs
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
@@ -118,9 +118,6 @@ jobs:
     - name: Terraform Plan
       run: terraform plan -input=false -var-file="conf/${{vars.ENV}}.conf"
 
-
-    - name: check
-      run: echo $${{env.DEPLOYMENT}}
     # Checks that all Terraform configuration files adhere to a canonical format
     - name: Terraform Format
       if: (github.event_name == 'pull_request' && github.event.pull_request.merged == true) || env.DEPLOYMENT == 'true'
