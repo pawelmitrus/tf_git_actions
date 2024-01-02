@@ -72,8 +72,9 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v1
 
-    # - name: Log in with Azure
-    #   run: az login --service-principal -u '' -p '${{ secrets.CLIENT_SECRET}}' --tenant '${{ secrets.TENANT_ID}}'
+    - name: Log in with Azure
+      run: az login --service-principal -u '${{ secrets.CLIENT_ID}}' -p '${{ secrets.CLIENT_SECRET}}' --tenant '${{ secrets.TENANT_ID}}'
+
     - name: Export env variables to azure auth
       run: |
         export ARM_CLIENT_ID="${{ secrets.CLIENT_ID}}"
