@@ -61,8 +61,6 @@ on:
         description: 'Deploy to target env'
         required: true
         type: boolean
-  pull_request:
-    types: [closed]
 
 
 permissions:
@@ -118,19 +116,17 @@ jobs:
         echo "ARM_TENANT_ID=${{ secrets.TENANT_ID}}" >> $GITHUB_ENV
         echo "ARM_SUBSCRIPTION_ID=${{ secrets.SUBSCRIPTION_ID}}" >> $GITHUB_ENV
 
-    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init
       run: terraform init -var-file="conf/${{env.ENVIRONMENT}}.conf" -backend-config="backend/${{env.ENVIRONMENT}}.tfbackend"
 
     - name: Terraform Validate
       run: terraform validate
 
-    # Generates an execution plan for Terraform
+      # Generates an execution plan for Terraform
     - name: Terraform Plan
       run: terraform plan -input=false -var-file="conf/${{env.ENVIRONMENT}}.conf"
 
-    - name: check
-      run: echo ${{env.DEPLOYMENT}}
       # Checks that all Terraform configuration files adhere to a canonical format
     - name: Terraform Format
       if: env.DEPLOYMENT == 'true'
