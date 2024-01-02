@@ -64,8 +64,6 @@ on:
 permissions:
   contents: read
 
-env:
-  ENVIRONMENT: dummy
 
 jobs:
   calculate_variables:
@@ -101,7 +99,7 @@ jobs:
     name: Terraform
     runs-on: ubuntu-latest
     environment:
-      name: ${{ inputs.ENVIRONMENT }} 
+      name: development
     needs: calculate_variables
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
@@ -141,11 +139,11 @@ jobs:
 
     # Checks that all Terraform configuration files adhere to a canonical format
     - name: Terraform Format
-      if: (github.event_name == 'pull_request' && github.event.pull_request.merged == true) || env.DEPLOYMENT == 'true'
+      if: env.DEPLOYMENT == 'true'
       run: terraform fmt -check 
 
       # On push to "main", build or change infrastructure according to Terraform configuration files
       # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
     - name: Terraform Apply
-      if: (github.event_name == 'pull_request' && github.event.pull_request.merged == true) || env.DEPLOYMENT == 'true'
+      if: env.DEPLOYMENT == 'true'
       run: terraform apply -auto-approve -input=false -var-file="conf/${{vars.ENV}}.conf"
