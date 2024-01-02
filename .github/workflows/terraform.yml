@@ -63,6 +63,9 @@ on:
 permissions:
   contents: read
 
+env:
+  ENVIRONMENT: dummy
+
 jobs:
   calculate_variables:
     runs-on: ubuntu-latest
@@ -96,7 +99,8 @@ jobs:
   terraform:
     name: Terraform
     runs-on: ubuntu-latest
-    environment: development
+    environment:
+      name: ${{env.ENVIRONMENT}} 
     needs: calculate_variables
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
