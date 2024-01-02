@@ -97,8 +97,8 @@ jobs:
           echo "Environment: $ENVIRONMENT"
           echo "Deployment: $DEPLOYMENT"
         env:
-          ENVIRONMENT: development
-          DEPLOYMENT: false
+          ENVIRONMENT: "development"
+          DEPLOYMENT: "false"
   terraform:
     name: Terraform
     runs-on: ubuntu-latest
