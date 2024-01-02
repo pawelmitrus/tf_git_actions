@@ -69,7 +69,7 @@ resource "azurerm_key_vault" "kv" {
 
   access_policy {
     tenant_id = var.tenant_id
-    object_id = data.azurerm_client_config.current.object_id
+    object_id = data.azurerm_client_config.client.object_id
 
     key_permissions = [
       "Get",
