@@ -137,7 +137,9 @@ jobs:
     - name: Terraform Plan
       run: terraform plan -input=false -var-file="conf/${{vars.ENV}}.conf"
 
-    # Checks that all Terraform configuration files adhere to a canonical format
+    - name: check
+      run: echo ${{env.DEPLOYMENT}}
+      # Checks that all Terraform configuration files adhere to a canonical format
     - name: Terraform Format
       if: env.DEPLOYMENT == 'true'
       run: terraform fmt -check 
