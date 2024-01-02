@@ -64,20 +64,40 @@ permissions:
   contents: read
 
 jobs:
-  inputs:
+  calculate_variables:
     runs-on: ubuntu-latest
     steps:
-      - run: |
+      - name: if manual run
+        if: github.event_name == 'workflow_dispatch'
+        run: |
           echo "Environment: $ENVIRONMENT"
           echo "Deployment: $DEPLOYMENT"
         env:
           ENVIRONMENT: ${{ inputs.environment }}
           DEPLOYMENT: ${{ inputs.deployment }}
+      
+      - name: if pr
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "Environment: $ENVIRONMENT"
+          echo "Deployment: $DEPLOYMENT"
+        env:
+          ENVIRONMENT: test
+          DEPLOYMENT: false
+
+      - name: else
+        if: github.event_name != 'pull_request' && github.event_name == 'push'
+        run: |
+          echo "Environment: $ENVIRONMENT"
+          echo "Deployment: $DEPLOYMENT"
+        env:
+          ENVIRONMENT: development
+          DEPLOYMENT: false
   terraform:
     name: Terraform
     runs-on: ubuntu-latest
     environment: development
-    needs: inputs
+    needs: calculate_variables
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
