@@ -52,6 +52,7 @@ on:
         description: 'Environment to run against'
         type: environment
         required: true
+        default: development
       deployment:
         description: 'Deploy to target env'
         required: true
@@ -100,7 +101,7 @@ jobs:
     name: Terraform
     runs-on: ubuntu-latest
     environment:
-      name: ${{env.ENVIRONMENT}} 
+      name: ${{ inputs.ENVIRONMENT }} 
     needs: calculate_variables
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
