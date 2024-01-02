@@ -119,6 +119,8 @@ jobs:
       run: terraform plan -input=false -var-file="conf/${{vars.ENV}}.conf"
 
 
+    - name: check
+      run: echo $${{env.DEPLOYMENT}}
     # Checks that all Terraform configuration files adhere to a canonical format
     - name: Terraform Format
       if: (github.event_name == 'pull_request' && github.event.pull_request.merged == true) || ${{env.DEPLOYMENT}} == true
