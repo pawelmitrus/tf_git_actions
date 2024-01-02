@@ -72,38 +72,31 @@ permissions:
 jobs:
   calculate_variables:
     runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.set-vars.outputs.environment }}
+      deployment: ${{ steps.set-vars.outputs.deployment }}
     steps:
-      - name: if manual run
-        if: github.event_name == 'workflow_dispatch'
+      - name: set-vars
+        id: set-vars
         run: |
-          echo "Environment: $ENVIRONMENT"
-          echo "Deployment: $DEPLOYMENT"
-        env:
-          ENVIRONMENT: ${{ inputs.environment }}
-          DEPLOYMENT: ${{ inputs.deployment }}
-      
-      - name: if pr
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "Environment: $ENVIRONMENT"
-          echo "Deployment: $DEPLOYMENT"
-        env:
-          ENVIRONMENT: test
-          DEPLOYMENT: false
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "::set-output name=environment::${{ inputs.environment }}"
+            echo "::set-output name=deployment::${{ inputs.deployment }}"
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "::set-output name=environment::test"
+            echo "::set-output name=deployment::false"
+          else
+            echo "::set-output name=environment::development"
+            echo "::set-output name=deployment::false"
+          fi
 
-      - name: else
-        if: github.event_name != 'pull_request' && github.event_name == 'push'
-        run: |
-          echo "Environment: $ENVIRONMENT"
-          echo "Deployment: $DEPLOYMENT"
-        env:
-          ENVIRONMENT: "development"
-          DEPLOYMENT: "false"
   terraform:
     name: Terraform
     runs-on: ubuntu-latest
     needs: calculate_variables
-
+    env:
+      ENVIRONMENT: ${{ needs.calculate_variables.outputs.environment }}
+      DEPLOYMENT: ${{ needs.calculate_variables.outputs.deployment }}
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
       run:
