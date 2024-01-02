@@ -42,7 +42,7 @@
 #       with:
 #         cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
-name: 'Terraform'
+name: 'CICD'
 
 on:
   push:
@@ -50,8 +50,13 @@ on:
     inputs:
       environment:
         description: 'Environment to run against'
-        type: environment
+        type: choice
         required: true
+        default: dev
+        options:
+          - dev
+          - test
+          - prod
       deployment:
         description: 'Deploy to target env'
         required: true
@@ -63,46 +68,35 @@ on:
 permissions:
   contents: read
 
-env:
-  ENVIRONMENT: dummy
 
 jobs:
   calculate_variables:
     runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.set-vars.outputs.environment }}
+      deployment: ${{ steps.set-vars.outputs.deployment }}
     steps:
-      - name: if manual run
-        if: github.event_name == 'workflow_dispatch'
+      - name: set-vars
+        id: set-vars
         run: |
-          echo "Environment: $ENVIRONMENT"
-          echo "Deployment: $DEPLOYMENT"
-        env:
-          ENVIRONMENT: ${{ inputs.environment }}
-          DEPLOYMENT: ${{ inputs.deployment }}
-      
-      - name: if pr
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "Environment: $ENVIRONMENT"
-          echo "Deployment: $DEPLOYMENT"
-        env:
-          ENVIRONMENT: test
-          DEPLOYMENT: false
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "::set-output name=environment::${{ inputs.environment }}"
+            echo "::set-output name=deployment::${{ inputs.deployment }}"
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "::set-output name=environment::test"
+            echo "::set-output name=deployment::false"
+          else
+            echo "::set-output name=environment::dev"
+            echo "::set-output name=deployment::false"
+          fi
 
-      - name: else
-        if: github.event_name != 'pull_request' && github.event_name == 'push'
-        run: |
-          echo "Environment: $ENVIRONMENT"
-          echo "Deployment: $DEPLOYMENT"
-        env:
-          ENVIRONMENT: development
-          DEPLOYMENT: false
   terraform:
     name: Terraform
     runs-on: ubuntu-latest
-    environment:
-      name: ${{env.ENVIRONMENT}} 
     needs: calculate_variables
-
+    env:
+      ENVIRONMENT: ${{ needs.calculate_variables.outputs.environment }}
+      DEPLOYMENT: ${{ needs.calculate_variables.outputs.deployment }}
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
       run:
@@ -129,22 +123,24 @@ jobs:
 
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init
-      run: terraform init -var-file="conf/${{vars.ENV}}.conf" -backend-config="backend/${{vars.ENV}}.tfbackend"
+      run: terraform init -var-file="conf/${{env.ENVIRONMENT}}.conf" -backend-config="backend/${{env.ENVIRONMENT}}.tfbackend"
 
     - name: Terraform Validate
       run: terraform validate
 
     # Generates an execution plan for Terraform
     - name: Terraform Plan
-      run: terraform plan -input=false -var-file="conf/${{vars.ENV}}.conf"
+      run: terraform plan -input=false -var-file="conf/${{env.ENVIRONMENT}}.conf"
 
-    # Checks that all Terraform configuration files adhere to a canonical format
+    - name: check
+      run: echo ${{env.DEPLOYMENT}}
+      # Checks that all Terraform configuration files adhere to a canonical format
     - name: Terraform Format
-      if: (github.event_name == 'pull_request' && github.event.pull_request.merged == true) || env.DEPLOYMENT == 'true'
+      if: env.DEPLOYMENT == 'true'
       run: terraform fmt -check 
 
       # On push to "main", build or change infrastructure according to Terraform configuration files
       # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
     - name: Terraform Apply
-      if: (github.event_name == 'pull_request' && github.event.pull_request.merged == true) || env.DEPLOYMENT == 'true'
-      run: terraform apply -auto-approve -input=false -var-file="conf/${{vars.ENV}}.conf"
+      if: env.DEPLOYMENT == 'true'
+      run: terraform apply -auto-approve -input=false -var-file="conf/${{env.ENVIRONMENT}}.conf"
