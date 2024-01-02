@@ -63,10 +63,6 @@ on:
 permissions:
   contents: read
 
-env:
-  ENVIRONMENT: development
-  DEPLOYMENT: false
-
 jobs:
   inputs:
     runs-on: ubuntu-latest
@@ -80,7 +76,7 @@ jobs:
   terraform:
     name: Terraform
     runs-on: ubuntu-latest
-    #environment: development
+    environment: development
     needs: inputs
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
