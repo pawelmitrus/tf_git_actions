@@ -24,6 +24,27 @@ resource "azurerm_resource_group" "rg" {
   }
 }
 
+
+resource "azurerm_databricks_workspace" "dbr_workspace" {
+  name                        = "${var.prefix}-${var.environment}-dbr"
+  resource_group_name         = azurerm_resource_group.rg.name
+  location                    = azurerm_resource_group.rg.location
+  sku                         = "premium"
+  managed_resource_group_name = "${var.prefix}-${var.environment}-dbr-managed"
+
+  public_network_access_enabled = true
+
+  custom_parameters {
+    no_public_ip        = true
+    public_subnet_name  = azurerm_subnet.vnet_subnet_public.name
+    private_subnet_name = azurerm_subnet.vnet_subnet_private.name
+    virtual_network_id  = azurerm_virtual_network.vnet.id
+
+    public_subnet_network_security_group_association_id  = azurerm_subnet_network_security_group_association.nsg_vnet_subnet_public.id
+    private_subnet_network_security_group_association_id = azurerm_subnet_network_security_group_association.nsg_vnet_subnet_private.id
+  }
+}
+
 resource "azurerm_storage_account" "storage" {
   name                     = "${var.prefix}${var.environment}sa"
   resource_group_name      = azurerm_resource_group.rg.name
@@ -37,3 +58,17 @@ resource "azurerm_storage_account" "storage" {
 #   storage_account_name  = azurerm_storage_account.storage.name
 #   container_access_type = "private"
 # }
+
+resource "azurerm_key_vault" "kv" {
+  name                        = "${var.prefix}-${var.environment}-kv"
+  location                    = azurerm_resource_group.rg.location
+  resource_group_name         = azurerm_resource_group.rg.name
+  enabled_for_disk_encryption = true
+  tenant_id                   = var.tenant_id
+  soft_delete_retention_days  = 7
+  purge_protection_enabled    = false
+
+  sku_name = "standard"
+
+  access_policy {}
+}
