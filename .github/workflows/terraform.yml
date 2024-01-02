@@ -82,9 +82,6 @@ jobs:
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "::set-output name=environment::${{ inputs.environment }}"
             echo "::set-output name=deployment::${{ inputs.deployment }}"
-          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            echo "::set-output name=environment::test"
-            echo "::set-output name=deployment::false"
           else
             echo "::set-output name=environment::dev"
             echo "::set-output name=deployment::false"
