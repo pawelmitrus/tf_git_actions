@@ -104,17 +104,11 @@ resource "azuread_application" "aad_app_reg" {
 }
 
 resource "azuread_service_principal" "aad_service_principal" {
-  client_id = azuread_application.aad_app_reg.application_id
-}
-
-resource "random_password" "password" {
-  length  = 26
-  special = true
+  client_id = azuread_application.aad_app_reg.client_id
 }
 
 resource "azuread_service_principal_password" "aad_service_principal_secret" {
   service_principal_id = azuread_service_principal.aad_service_principal.id
-  value                = random_password.password.result
   end_date_relative    = "8760h"
 }
 
