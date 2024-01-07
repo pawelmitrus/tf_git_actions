@@ -99,12 +99,12 @@ resource "azurerm_storage_container" "container_silver" {
 
 resource "azuread_application" "aad_app_reg" {
   display_name = "${var.prefix}-${var.environment}-example-app"
-  owners       = [data.azurerm_client_config.object_id]
+  owners       = [data.azurerm_client_config.client.object_id]
 
 }
 
 resource "azuread_service_principal" "aad_service_principal" {
-  client_id = azuread_application.app_reg.application_id
+  client_id = azuread_application.aad_app_reg.application_id
 }
 
 resource "random_password" "password" {
@@ -113,14 +113,14 @@ resource "random_password" "password" {
 }
 
 resource "azuread_service_principal_password" "aad_service_principal_secret" {
-  service_principal_id = azurerm_azuread_service_principal.aad_service_principal.id
+  service_principal_id = azuread_service_principal.aad_service_principal.id
   value                = random_password.password.result
   end_date_relative    = "8760h"
 }
 
 resource "azurerm_key_vault_secret" "kv_secret" {
   name         = "service-principal-secret"
-  value        = azurerm_azuread_service_principal_password.aad_service_principal_secret.value
+  value        = azuread_service_principal_password.aad_service_principal_secret.value
   key_vault_id = azurerm_key_vault.kv.id
 }
 
