@@ -96,6 +96,31 @@ resource "azurerm_storage_container" "container_silver" {
   container_access_type = "private"
 }
 
+resource "azurerm_azuread_application" "aad_app_reg" {
+  name = "${var.prefix}-${var.environment}-example-app"
+}
+
+resource "azurerm_azuread_service_principal" "aad_service_principal" {
+  application_id = azurerm_azuread_application.app_reg.application_id
+}
+
+resource "random_password" "password" {
+  length  = 26
+  special = true
+}
+
+resource "azurerm_azuread_service_principal_password" "aad_service_principal_secret" {
+  service_principal_id = azurerm_azuread_service_principal.aad_service_principal.id
+  value                = random_password.password.result
+  end_date_relative    = "8760h"
+}
+
+resource "azurerm_key_vault_secret" "kv_secret" {
+  name         = "service-principal-secret"
+  value        = azurerm_azuread_service_principal_password.aad_service_principal_secret.value
+  key_vault_id = azurerm_key_vault.kv.id
+}
+
 resource "azurerm_role_assignment" "rbac" {
   scope                = azurerm_storage_account.storage.id
   role_definition_name = "Storage Blob Data Contributor"
