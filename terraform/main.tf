@@ -90,8 +90,14 @@ resource "azurerm_storage_container" "container_bronze" {
   container_access_type = "private"
 }
 
-resource "azurerm_storage_container" "container_bronze" {
+resource "azurerm_storage_container" "container_silver" {
   name                  = "silver"
   storage_account_name  = azurerm_storage_account.storage.name
   container_access_type = "private"
+}
+
+resource "azurerm_role_assignment" "rbac" {
+  scope                = azurerm_storage_account.storage.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = data.azurerm_client_config.client.object_id
 }
