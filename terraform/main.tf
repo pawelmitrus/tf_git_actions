@@ -96,12 +96,15 @@ resource "azurerm_storage_container" "container_silver" {
   container_access_type = "private"
 }
 
-resource "azurerm_azuread_application" "aad_app_reg" {
-  name = "${var.prefix}-${var.environment}-example-app"
+
+resource "azuread_application" "aad_app_reg" {
+  display_name = "${var.prefix}-${var.environment}-example-app"
+  owners       = [data.azurerm_client_config.object_id]
+
 }
 
-resource "azurerm_azuread_service_principal" "aad_service_principal" {
-  application_id = azurerm_azuread_application.app_reg.application_id
+resource "azuread_service_principal" "aad_service_principal" {
+  client_id = azuread_application.app_reg.application_id
 }
 
 resource "random_password" "password" {
@@ -109,7 +112,7 @@ resource "random_password" "password" {
   special = true
 }
 
-resource "azurerm_azuread_service_principal_password" "aad_service_principal_secret" {
+resource "azuread_service_principal_password" "aad_service_principal_secret" {
   service_principal_id = azurerm_azuread_service_principal.aad_service_principal.id
   value                = random_password.password.result
   end_date_relative    = "8760h"
