@@ -24,7 +24,6 @@ resource "azurerm_resource_group" "rg" {
   }
 }
 
-
 resource "azurerm_databricks_workspace" "dbr_workspace" {
   name                        = "${var.prefix}-${var.environment}-dbr"
   resource_group_name         = azurerm_resource_group.rg.name
@@ -85,8 +84,14 @@ resource "azurerm_key_vault" "kv" {
   }
 }
 
-# resource "azurerm_storage_container" "cont" {
-#   name                  = "com01"
-#   storage_account_name  = azurerm_storage_account.storage.name
-#   container_access_type = "private"
-# }
+resource "azurerm_storage_container" "container_bronze" {
+  name                  = "bronze"
+  storage_account_name  = azurerm_storage_account.storage.name
+  container_access_type = "private"
+}
+
+resource "azurerm_storage_container" "container_bronze" {
+  name                  = "silver"
+  storage_account_name  = azurerm_storage_account.storage.name
+  container_access_type = "private"
+}
