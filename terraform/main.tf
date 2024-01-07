@@ -99,7 +99,7 @@ resource "azurerm_storage_container" "container_silver" {
 
 resource "azuread_application" "aad_app_reg" {
   display_name = "${var.prefix}-${var.environment}-example-app"
-  owners       = [data.azurerm_client_config.client.object_id]
+  #owners       = [data.azurerm_client_config.client.object_id]
 
 }
 
